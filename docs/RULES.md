@@ -63,6 +63,13 @@ Signal generation (R9/R10/R13)
   -> Order build and lot sizing
 ```
 
+Priority rule:
+
+- R9/R10/R13 only generate candidate directions.
+- R5 confidence is the final entry gate before execution.
+- R20 and other hard guards are veto layers after candidate generation.
+- No signal-generation rule may force an order that failed confidence or veto.
+
 ## Soft rules vs hard rules
 
 | Layer | Owner | Examples |

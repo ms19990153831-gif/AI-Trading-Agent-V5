@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from config import EXECUTION_MODE, INITIAL_BALANCE, MAX_LOSS_STREAK, MT5_MAGIC
+from config import (
+    DAILY_LOSS_INCLUDE_FLOATING,
+    EXECUTION_MODE,
+    INITIAL_BALANCE,
+    MAX_LOSS_STREAK,
+    MT5_MAGIC,
+)
 
 
 class Account:
@@ -21,11 +27,18 @@ class Account:
             if account is not None:
                 positions = mt5.positions_get() or []
                 my_positions = [p for p in positions if p.magic == MT5_MAGIC]
+                realized = self.db.daily_pnl_session()
+                floating = sum(float(p.profit or 0.0) for p in my_positions)
+                daily_pnl = (
+                    realized + floating
+                    if DAILY_LOSS_INCLUDE_FLOATING
+                    else realized
+                )
                 return {
                     "balance": round(account.balance, 2),
                     "equity": round(account.equity, 2),
                     "open_positions": len(my_positions),
-                    "daily_pnl": round(self.db.daily_pnl_session(), 2),
+                    "daily_pnl": round(daily_pnl, 2),
                     "loss_streak": streak,
                     "loss_paused": paused,
                     "positions": [

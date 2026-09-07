@@ -102,6 +102,9 @@ ENABLE_MIN_LOT_RISK_GUARD = _env_bool("ENABLE_MIN_LOT_RISK_GUARD", "true")
 # Allow small rounding overshoot beyond MAX_RISK_PERCENT; 0.5 means 50%.
 MIN_LOT_RISK_TOLERANCE = _env_float("MIN_LOT_RISK_TOLERANCE", "0.5")
 ENABLE_DAILY_LOSS_LIMIT = _env_bool("ENABLE_DAILY_LOSS_LIMIT", "true")
+# Production switch: include floating PnL when measuring the daily loss gate.
+# Kept false for demo training so a large floating drawdown does not pause it.
+DAILY_LOSS_INCLUDE_FLOATING = _env_bool("DAILY_LOSS_INCLUDE_FLOATING", "false")
 ENABLE_LOSS_PAUSE = _env_bool("ENABLE_LOSS_PAUSE", "true")
 ENABLE_SIDE_LOSS_PAUSE = _env_bool("ENABLE_SIDE_LOSS_PAUSE", "false")
 SIDE_LOSS_PAUSE_STREAK = _env_int("SIDE_LOSS_PAUSE_STREAK", "2")

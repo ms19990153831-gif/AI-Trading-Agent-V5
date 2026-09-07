@@ -1,0 +1,9 @@
+services:
+  trading_ai:
+    build: .
+    container_name: ai_trading_agent
+    restart: always
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+    command: ["python", "main.py", "--mode", "v5", "--cycles", "288", "--interval", "300"]

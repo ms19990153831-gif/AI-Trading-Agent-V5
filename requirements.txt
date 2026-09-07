@@ -1,0 +1,8 @@
+openai>=1.30.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+MetaTrader5>=5.0.45
+python-dotenv>=1.0.0
+requests>=2.31.0
+# Optional: prettier candlestick charts. A matplotlib fallback is built in.
+# mplfinance>=0.12.10b0

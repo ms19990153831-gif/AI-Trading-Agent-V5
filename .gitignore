@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.env
+.env.local
+.env.*
+!.env.example
+data/
+*.db
+*.csv
+*.png
+logs/
+charts/
+reviews/
+backtest_report.json

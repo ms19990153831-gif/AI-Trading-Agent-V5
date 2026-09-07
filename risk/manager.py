@@ -124,8 +124,8 @@ class RiskManager:
             return "连亏暂停交易（24小时）"
         return None
 
-    @staticmethod
     def _apply_addon_policy(
+        self,
         decision: dict,
         market: dict,
         positions: list[dict],
@@ -171,6 +171,31 @@ class RiskManager:
         same_side_count = len(same_side_positions)
         has_any_same_symbol = bool(same_symbol_positions)
         same_side = has_any_same_symbol and same_side
+        if same_side and bool(decision.get("add_on")) and self.db is not None and symbol:
+            db_rows = [
+                row
+                for row in self.db.open_trades(symbol=symbol)
+                if str(row.get("side", "")).upper() == action
+            ]
+            if db_rows and not all(
+                self._is_breakeven(row) for row in db_rows
+            ):
+                reason = (
+                    "旧持仓尚未移至保本价，禁止加仓；"
+                    "需等待原仓进入保本或平仓后再考虑 add-on"
+                )
+                return (
+                    {
+                        **decision,
+                        "action": "WAIT",
+                        "add_on": False,
+                        "confidence": min(
+                            float(decision.get("confidence") or 0), 40
+                        ),
+                        "reason": reason,
+                    },
+                    reason,
+                )
         indicators = market.get("indicators", {})
         strong_trend = (
             indicators.get("market_state") == "trend"
@@ -209,6 +234,21 @@ class RiskManager:
                 reason,
             )
         return decision, None
+
+    @staticmethod
+    def _is_breakeven(trade: dict) -> bool:
+        """Return True when a held position's stop has moved to entry."""
+        entry = float(trade.get("entry") or 0.0)
+        sl = float(trade.get("sl_current") or trade.get("sl") or 0.0)
+        if entry <= 0 or sl <= 0:
+            return False
+        side = str(trade.get("side", "")).upper()
+        tolerance = 1e-6
+        if side == "BUY":
+            return sl >= entry - tolerance
+        if side == "SELL":
+            return sl <= entry + tolerance
+        return False
 
     @staticmethod
     def _min_stop_atr_guard(order: dict, market: dict) -> str | None:

@@ -1414,6 +1414,55 @@ class RiskManagerSmallAccountGuardTest(unittest.TestCase):
         self.assertTrue(review["allow"])
 
 
+class AddOnBreakevenGuardTest(DatabaseTestCase):
+    def _seed_and_review(self, sl: float) -> dict:
+        self.db.save_trade(
+            {
+                "symbol": "XAUUSD",
+                "side": "BUY",
+                "volume": 0.01,
+                "entry": 3350.0,
+                "sl": sl,
+                "tp": 3400.0,
+                "magic": 1,
+                "reason": "add-on breakeven test",
+                "confidence": 85,
+            }
+        )
+        risk = RiskManager(
+            self.db,
+            account=_FakeAccount(
+                [{"side": "BUY", "symbol": "XAUUSD", "volume": 0.01, "entry": 3350.0}]
+            ),
+        )
+        return risk.review(
+            {
+                "action": "BUY",
+                "confidence": 90,
+                "risk_percent": 0.01,
+                "market_state": "趋势",
+                "add_on": True,
+            },
+            {
+                "symbol": "XAUUSD",
+                "close": 3360.0,
+                "atr": 4.0,
+                "indicators": {"market_state": "trend", "adx": 40},
+            },
+        )
+
+    def test_blocks_add_on_before_breakeven(self) -> None:
+        review = self._seed_and_review(3340.0)
+        self.assertFalse(review["allow"])
+        self.assertTrue(
+            any("保本" in reason for reason in review["reasons"])
+        )
+
+    def test_allows_add_on_after_breakeven(self) -> None:
+        review = self._seed_and_review(3350.0)
+        self.assertTrue(review["allow"])
+
+
 class RiskManagerStopWidthGuardTest(unittest.TestCase):
     class _Account:
         def snapshot(self) -> dict:

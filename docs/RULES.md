@@ -38,6 +38,39 @@ Every rule has one stable id. A rule may live in one of three layers:
 | R20 | Rule veto cannot be argued away | code | implemented |
 | R21 | Macro risk is advisory, not a hard stop | advisory/prompt | implemented |
 
+## Versioning
+
+- **V1 implemented**: the rule table above is the running rule set.
+- **V2 draft**: proposed changes that still need calendar data or more evidence:
+  - Macro event calendar with automatic confidence increase and position halving.
+  - CHoCH should not immediately discard the old trend until structure confirmation.
+  - Severe momentum divergence should raise entry quality, not automatically forbid a trade.
+  - Optional counter-SMA entry only at a large-timeframe supply/demand zone after CHoCH.
+
+## Pipeline protocol
+
+Decision requests pass through the guards in this order. Once a guard returns
+`REJECT`, later signal matching does not force the order through:
+
+```text
+Signal generation (R9/R10/R13)
+  -> Vision/form filters (R14)
+  -> Structure conflict guard (R19)
+  -> Macro/event risk context (R21)
+  -> Rule veto (R20)
+  -> Risk firewall (R4/R5/R12)
+  -> ATR/structural stop guard (R8a)
+  -> Order build and lot sizing
+```
+
+## Soft rules vs hard rules
+
+| Layer | Owner | Examples |
+| --- | --- | --- |
+| Soft | LLM prompt | market interpretation, visual structure, confidence score, `reason` text |
+| Advisory | LLM context | divergence, ICT, CHoCH, macro risk, key levels |
+| Hard | Python code | confidence floor, risk %, daily loss, max positions, add-on limit, breakeven requirement, ATR stop guard, min-lot risk |
+
 ## How to add a rule
 
 1. Give it a unique id, for example `R22`.

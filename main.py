@@ -15,6 +15,7 @@ import argparse
 import json
 import os
 import re
+import sys
 import time
 import traceback
 from datetime import datetime
@@ -39,6 +40,53 @@ from memory.database import Database
 from mt5.connector import MT5Connector
 from backtest import run_backtest
 from training import run_training
+
+
+class _TeeStream:
+    """Write every message to a UTF-8 log file and the console together."""
+
+    def __init__(self, console, log_file):
+        self.console = console
+        self.log_file = log_file
+
+    def write(self, text: str) -> int:
+        written = 0
+        try:
+            self.log_file.write(text)
+            self.log_file.flush()
+            written = len(text)
+        except OSError:
+            pass
+        try:
+            self.console.write(text)
+            self.console.flush()
+        except OSError:
+            pass
+        return written
+
+    def flush(self) -> None:
+        try:
+            self.log_file.flush()
+        except OSError:
+            pass
+        try:
+            self.console.flush()
+        except OSError:
+            pass
+
+
+def _enable_console_log() -> None:
+    """Duplicate console output to AI_LOG_FILE when launched by run_v5.bat."""
+    log_path = os.environ.get("AI_LOG_FILE")
+    if not log_path:
+        return
+    try:
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        handle = open(log_path, "a", encoding="utf-8")
+        sys.stdout = _TeeStream(sys.stdout, handle)
+        sys.stderr = _TeeStream(sys.stderr, handle)
+    except OSError as exc:
+        print(f"log file unavailable: {type(exc).__name__}: {exc}")
 
 
 _ZH_TREND = {"bullish": "看涨", "bearish": "看跌", "neutral": "震荡"}
@@ -449,6 +497,7 @@ def run_analyze(ceo: TradingCEO, db: Database) -> dict:
 
 
 def main() -> None:
+    _enable_console_log()
     parser = argparse.ArgumentParser(description="AI Trading Agent V1-V5")
     parser.add_argument(
         "--mode",

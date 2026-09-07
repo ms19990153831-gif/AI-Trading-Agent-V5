@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "library": "AI Trading Agent rules",
+  "rules": [
+    {"id": "R1", "name": "No edge means WAIT", "layer": "prompt", "status": "implemented", "enabled": true},
+    {"id": "R2", "name": "Strict JSON decision output", "layer": "prompt", "status": "implemented", "enabled": true},
+    {"id": "R3", "name": "No trend reversal without reversal structure", "layer": "prompt", "status": "implemented", "enabled": true},
+    {"id": "R4", "name": "Risk before prediction", "layer": "code", "status": "implemented", "enabled": true},
+    {"id": "R5", "name": "Confidence floor with R9/R10 exception", "layer": "code", "status": "implemented", "enabled": true},
+    {"id": "R6", "name": "Chinese reason output", "layer": "prompt", "status": "implemented", "enabled": true},
+    {"id": "R7", "name": "Strong trend allows tight-stop chasing", "layer": "prompt", "status": "implemented", "enabled": true},
+    {"id": "R8", "name": "Do not idle on one RSI value", "layer": "prompt", "status": "implemented", "enabled": true},
+    {"id": "R9", "name": "Trend state + momentum => follow trend", "layer": "prompt+code", "status": "implemented", "enabled": true},
+    {"id": "R10", "name": "Range signal => follow signal", "layer": "prompt", "status": "implemented", "enabled": true},
+    {"id": "R11", "name": "WAIT only with explicit reasons", "layer": "prompt", "status": "implemented", "enabled": true},
+    {"id": "R12", "name": "No repeated entries unless strong add-on", "layer": "code", "status": "implemented", "enabled": true},
+    {"id": "R13", "name": "Range boundary structure entry", "layer": "prompt", "status": "implemented", "enabled": true},
+    {"id": "R14", "name": "Vision candle stop/stall logic", "layer": "prompt+code", "status": "partial", "enabled": true},
+    {"id": "R15", "name": "BOS/CHoCH/health is context", "layer": "advisory", "status": "implemented", "enabled": true},
+    {"id": "R16", "name": "Divergence and key levels are context", "layer": "advisory", "status": "implemented", "enabled": true},
+    {"id": "R17", "name": "CCI/MACD/ICT are context", "layer": "advisory", "status": "implemented", "enabled": true},
+    {"id": "R18", "name": "Trend phase guidance", "layer": "advisory+prompt", "status": "implemented", "enabled": true},
+    {"id": "R19", "name": "SMA/structure conflict confirmation", "layer": "code", "status": "implemented", "enabled": true},
+    {"id": "R20", "name": "Rule veto cannot be argued away", "layer": "code", "status": "implemented", "enabled": true},
+    {"id": "R21", "name": "Macro risk is advisory", "layer": "advisory+prompt", "status": "implemented", "enabled": true}
+  ]
+}

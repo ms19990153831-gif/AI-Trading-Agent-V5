@@ -6,6 +6,13 @@
 
 本仓库只公开源码、测试和部署文件，不提交 `.env`、行情 CSV、SQLite 数据库、日志或生成的图表。
 
+## Rules & Contributing
+
+- 规则总览：[docs/RULES.md](docs/RULES.md)
+- 机器可读规则清单：[rules/manifest.json](rules/manifest.json)
+- 贡献指南：[CONTRIBUTING.md](CONTRIBUTING.md)
+- 建议新规则：[Rule suggestion issue](.github/ISSUE_TEMPLATE/rule_suggestion.md)
+
 运行前请执行：
 
 ```bash

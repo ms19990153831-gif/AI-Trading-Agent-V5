@@ -16,7 +16,8 @@ if defined PID (
 )
 (echo %LOGFILE%)> "data\current_bot_log.txt"
 echo [%date% %time%] AI bot starting...
-python -u main.py --mode v5 --cycles 288 --interval 300 2>&1 | powershell -NoProfile -ExecutionPolicy Bypass -Command "$input | Tee-Object -FilePath '%LOGFILE%' -Append"
+set "PYTHONIOENCODING=utf-8"
+python -u main.py --mode v5 --cycles 288 --interval 300 >> "%LOGFILE%" 2>&1
 echo.
 echo Bot exited with code %errorlevel%. Log: %LOGFILE%
 timeout /t 3 /nobreak >nul

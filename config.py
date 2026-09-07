@@ -170,6 +170,9 @@ RANGE_BUY_RSI_MAX = _env_float("RANGE_BUY_RSI_MAX", "55")
 RANGE_SELL_RSI_MIN = _env_float("RANGE_SELL_RSI_MIN", "55")
 DEFAULT_RR = _env_float("DEFAULT_RR", "2.0")
 ATR_STOP_MULTIPLIER = _env_float("ATR_STOP_MULTIPLIER", "1.5")
+ENABLE_MIN_STOP_ATR_GUARD = _env_bool("ENABLE_MIN_STOP_ATR_GUARD", "true")
+MIN_STOP_ATR_MULTIPLIER = _env_float("MIN_STOP_ATR_MULTIPLIER", "0.5")
+MAX_ADDONS_PER_SYMBOL = _env_int("MAX_ADDONS_PER_SYMBOL", "1")
 
 # V2 order manager ------------------------------------------------------------
 PARTIAL_TP_RATIO = _env_float("PARTIAL_TP_RATIO", "0.5")

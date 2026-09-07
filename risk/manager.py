@@ -6,6 +6,7 @@ from config import (
     ADDON_MIN_ADX,
     ADDON_MIN_CONFIDENCE,
     DAILY_LOSS_LIMIT,
+    ENABLE_MIN_STOP_ATR_GUARD,
     ENABLE_MIN_LOT_RISK_GUARD,
     ENABLE_DAILY_LOSS_LIMIT,
     ENABLE_LOSS_PAUSE,
@@ -13,6 +14,8 @@ from config import (
     INITIAL_BALANCE,
     MAX_OPEN_POSITIONS,
     MAX_RISK_PERCENT,
+    MAX_ADDONS_PER_SYMBOL,
+    MIN_STOP_ATR_MULTIPLIER,
     MIN_LOT_RISK_TOLERANCE,
     SIDE_LOSS_PAUSE_HOURS,
     SIDE_LOSS_PAUSE_STREAK,
@@ -85,6 +88,20 @@ class RiskManager:
                     "reasons": reasons,
                 }
                 order = None
+        if (
+            order is not None
+            and order["action"] in ("BUY", "SELL")
+            and ENABLE_MIN_STOP_ATR_GUARD
+        ):
+            guard_reason = self._min_stop_atr_guard(order, market)
+            if guard_reason:
+                reasons.append(guard_reason)
+                check = {
+                    "allow": False,
+                    "code": "BLOCKED",
+                    "reasons": reasons,
+                }
+                order = None
         return {
             "allow": check["allow"],
             "code": check["code"],
@@ -139,9 +156,21 @@ class RiskManager:
                 },
                 reason,
             )
-        same_side = any(
-            str(pos.get("side", "")).upper() == action for pos in positions
-        )
+        same_symbol_positions = [
+            pos
+            for pos in positions
+            if (not symbol)
+            or str(pos.get("symbol") or "").upper() == symbol
+        ]
+        same_side_positions = [
+            pos
+            for pos in same_symbol_positions
+            if str(pos.get("side", "")).upper() == action
+        ]
+        same_side = bool(same_side_positions)
+        same_side_count = len(same_side_positions)
+        has_any_same_symbol = bool(same_symbol_positions)
+        same_side = has_any_same_symbol and same_side
         indicators = market.get("indicators", {})
         strong_trend = (
             indicators.get("market_state") == "trend"
@@ -154,13 +183,21 @@ class RiskManager:
             and bool(decision.get("add_on"))
             and float(decision.get("confidence") or 0) >= ADDON_MIN_CONFIDENCE
             and adx >= ADDON_MIN_ADX
+            and same_side_count <= MAX_ADDONS_PER_SYMBOL
             and len(positions) < MAX_OPEN_POSITIONS
         )
         if not add_on_ok:
-            reason = (
-                "已有持仓且未达到加仓条件"
-                "（需要AI加仓信号+强趋势+高置信度），等待趋势强化或平仓"
-            )
+            if same_side and same_side_count > MAX_ADDONS_PER_SYMBOL:
+                reason = (
+                    f"同品种加仓次数已达上限"
+                    f"（最多{int(MAX_ADDONS_PER_SYMBOL)}次加仓），"
+                    "等待已有加仓平仓"
+                )
+            else:
+                reason = (
+                    "已有持仓且未达到加仓条件"
+                    "（需要AI加仓信号+强趋势+高置信度），等待趋势强化或平仓"
+                )
             return (
                 {
                     **decision,
@@ -172,6 +209,31 @@ class RiskManager:
                 reason,
             )
         return decision, None
+
+    @staticmethod
+    def _min_stop_atr_guard(order: dict, market: dict) -> str | None:
+        """Reject ultra-tight stops that are not anchored to a structural distance."""
+        action = str(order.get("action") or "").upper()
+        if action not in ("BUY", "SELL"):
+            return None
+        atr = float(
+            (market.get("indicators") or {}).get("atr")
+            or market.get("atr")
+            or 0.0
+        )
+        close = float(market.get("close") or order.get("entry") or 0.0)
+        entry = float(order.get("entry") or 0.0)
+        sl = float(order.get("sl") or 0.0)
+        if atr <= 0 or close <= 0 or entry <= 0 or sl <= 0:
+            return None
+        minimum = atr * float(MIN_STOP_ATR_MULTIPLIER)
+        if abs(entry - sl) >= minimum:
+            return None
+        return (
+            f"止损距离过近：{abs(entry - sl):.5f}小于"
+            f"ATR×{float(MIN_STOP_ATR_MULTIPLIER):.2f}（{minimum:.5f}），"
+            "禁止使用无结构依据的超紧止损"
+        )
 
     def _side_loss_pause_reason(self, action: str) -> str | None:
         """Pause the same side after consecutive stop-style losses."""

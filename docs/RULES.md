@@ -23,10 +23,11 @@ Every rule has one stable id. A rule may live in one of three layers:
 | R6 | Chinese reason output | prompt | implemented |
 | R7 | Strong trend + momentum can allow chasing with tight stop | prompt | implemented |
 | R8 | Do not wait mechanically on a single RSI value | prompt | implemented |
+| R8a | Stops must be anchored to ATR/structural distance, not ultra-tight | code | implemented |
 | R9 | Trend state + momentum_ok => BUY/SELL by trend direction | prompt+code | implemented |
 | R10 | Range state + range_signal => follow signal | prompt | implemented |
 | R11 | Allow WAIT only with explicit reasons | prompt | implemented |
-| R12 | Existing position blocks new entries unless strong add-on | code | implemented |
+| R12 | Existing position blocks new entries; add-on limited to one per symbol | code | implemented |
 | R13 | Range box boundary structure can be an entry | prompt | implemented |
 | R14 | Vision stop/stall candles affect new entries and exits | prompt+code | partial |
 | R15 | BOS/CHoCH/trend health is context | advisory | implemented |

@@ -1265,6 +1265,36 @@ class RiskManagerAddonTest(unittest.TestCase):
         )
         self.assertTrue(review["allow"])
 
+    def test_blocks_second_add_on_on_same_symbol(self) -> None:
+        risk = RiskManager(
+            None,
+            account=_FakeAccount(
+                [
+                    {"side": "BUY", "symbol": "XAUUSD", "volume": 0.01, "entry": 3350},
+                    {"side": "BUY", "symbol": "XAUUSD", "volume": 0.01, "entry": 3355},
+                ]
+            ),
+        )
+        review = risk.review(
+            {
+                "action": "BUY",
+                "confidence": 90,
+                "risk_percent": 0.01,
+                "market_state": "趋势",
+                "add_on": True,
+            },
+            {
+                "symbol": "XAUUSD",
+                "close": 3360,
+                "atr": 4,
+                "indicators": {"market_state": "trend", "adx": 40},
+            },
+        )
+        self.assertFalse(review["allow"])
+        self.assertTrue(
+            any("加仓次数已达上限" in reason for reason in review["reasons"])
+        )
+
     def test_allows_strong_trend_addon(self) -> None:
         risk = RiskManager(
             None,
@@ -1381,6 +1411,52 @@ class RiskManagerSmallAccountGuardTest(unittest.TestCase):
     def test_can_be_disabled(self) -> None:
         with mock.patch("risk.manager.ENABLE_MIN_LOT_RISK_GUARD", False):
             review = self._review(200.0)
+        self.assertTrue(review["allow"])
+
+
+class RiskManagerStopWidthGuardTest(unittest.TestCase):
+    class _Account:
+        def snapshot(self) -> dict:
+            return {
+                "balance": 10000.0,
+                "equity": 10000.0,
+                "open_positions": 0,
+                "daily_pnl": 0.0,
+                "loss_streak": 0,
+                "loss_paused": False,
+                "positions": [],
+            }
+
+    def _review(self, sl: float) -> dict:
+        risk = RiskManager(None, account=self._Account())
+        return risk.review(
+            {
+                "action": "BUY",
+                "confidence": 85,
+                "risk_percent": 0.01,
+                "sl": sl,
+                "tp": 102.0,
+            },
+            {
+                "symbol": "XAUUSD",
+                "close": 100.0,
+                "atr": 2.0,
+                "indicators": {"market_state": "trend", "adx": 30},
+            },
+            positions=[],
+        )
+
+    def test_blocks_ultra_tight_stop(self) -> None:
+        with mock.patch("risk.manager.ENABLE_MIN_STOP_ATR_GUARD", True):
+            review = self._review(99.95)
+        self.assertFalse(review["allow"])
+        self.assertTrue(
+            any("止损距离过近" in reason for reason in review["reasons"])
+        )
+
+    def test_allows_atr_anchored_stop(self) -> None:
+        with mock.patch("risk.manager.ENABLE_MIN_STOP_ATR_GUARD", True):
+            review = self._review(98.0)
         self.assertTrue(review["allow"])
 
 

@@ -2,6 +2,8 @@
 
 把 ChatGPT 对话里的 AI 自主交易系统从架构设计实现为可运行的软件。系统不是固定策略 EA，而是一个由 AI 决策、风险防火墙保护、带记忆和复盘学习的多 Agent 交易员。
 
+English version: [README_en.md](README_en.md)
+
 ## Public repository note
 
 本仓库只公开源码、测试和部署文件，不提交 `.env`、行情 CSV、SQLite 数据库、日志或生成的图表。
